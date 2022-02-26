@@ -2,6 +2,7 @@ class WhatsAppController {
   constructor() {
     this.elementsPrototype();
     this.loadElements();
+    this.initEvents();
   }
 
   loadElements() {
@@ -72,6 +73,39 @@ class WhatsAppController {
     Element.prototype.hasClass = function (name) {
       return this.classList.contains(name);
     }
+  }
+
+  initEvents() {
+    // PROFILE
+    this.el.myPhoto.on('click', e => {
+      this.closeAllLeftPanel();
+      this.el.panelEditProfile.show();
+      setTimeout(() => {// hack para funcionar corretamente transition do css
+        this.el.panelEditProfile.addClass('open');
+      }, 300);
+    });
+
+    this.el.btnClosePanelEditProfile.on('click', e => {
+      this.el.panelEditProfile.removeClass('open');
+    });
+
+    // CONTACT
+    this.el.btnNewContact.on('click', e => {
+      this.closeAllLeftPanel();
+      this.el.panelAddContact.show();
+      setTimeout(() => {// hack para funcionar corretamente transition do css
+        this.el.panelAddContact.addClass('open');
+      }, 300);
+    });
+
+    this.el.btnClosePanelAddContact.on('click', e => {
+      this.el.panelAddContact.removeClass('open');
+    });
+  }
+
+  closeAllLeftPanel() {
+    this.el.panelEditProfile.hide();
+    this.el.panelAddContact.hide();
   }
 
 }
