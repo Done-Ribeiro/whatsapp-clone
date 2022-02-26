@@ -160,20 +160,64 @@ class WhatsAppController {
     });
 
     this.el.btnAttachPhoto.on('click', e => {
-      console.log('Photo');
+      this.el.inputPhoto.click();
+    });
+
+    this.el.inputPhoto.on('change', e => {
+      console.log(this.el.inputPhoto.files);
+      // files é uma colecao e nao um array.. por isso do spread -> [...]
+      [...this.el.inputPhoto.files].forEach(file => {
+        console.log(file);
+      });
     });
 
     this.el.btnAttachCamera.on('click', e => {
-      console.log('Camera');
+      this.closeAllMainPanel();// precisamos esconder primeiro os outros paineis
+      this.el.panelCamera.addClass('open');
+      this.el.panelCamera.css({
+        'height': 'calc(100% - 120px)'
+      });
+    });
+
+    this.el.btnClosePanelCamera.on('click', e => {
+      this.closeAllMainPanel();
+      this.el.panelMessagesContainer.show();
+    });
+
+    this.el.btnTakePicture.on('click', e => {
+      console.log('take picture');
     });
 
     this.el.btnAttachDocument.on('click', e => {
-      console.log('Document');
+      this.closeAllMainPanel();
+      this.el.panelDocumentPreview.addClass('open');
+      this.el.panelDocumentPreview.css({
+        'height': 'calc(100% - 120px)'
+      });
+    });
+
+    this.el.btnClosePanelDocumentPreview.on('click', e => {
+      this.closeAllMainPanel();
+      this.el.panelMessagesContainer.show();
+    });
+
+    this.el.btnSendDocument.on('click', e => {
+      console.log('send document');
     });
 
     this.el.btnAttachContact.on('click', e => {
-      console.log('Contact');
+      this.el.modalContacts.show();
     });
+
+    this.el.btnCloseModalContacts.on('click', e => {
+      this.el.modalContacts.hide();
+    });
+  }
+
+  closeAllMainPanel() {
+    this.el.panelMessagesContainer.hide();
+    this.el.panelDocumentPreview.removeClass('open');
+    this.el.panelCamera.removeClass('open');
   }
 
   // metodo criado para poder desinscrever o evento e nao crashar o app 
