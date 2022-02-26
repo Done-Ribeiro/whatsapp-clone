@@ -73,6 +73,22 @@ class WhatsAppController {
     Element.prototype.hasClass = function (name) {
       return this.classList.contains(name);
     }
+
+    // retorna um novo form
+    // ex.: app.el.formPanelAddContact.getForm().get('email')
+    HTMLFormElement.prototype.getForm = function () {
+      return new FormData(this);
+    }
+
+    // retorna o msm form so que em JSON
+    // ex.: app.el.formPanelAddContact.toJSON()
+    HTMLFormElement.prototype.toJSON = function () {
+      let json = {};
+      this.getForm().forEach((value, key) => {
+        json[key] = value;
+      });
+      return json;
+    }
   }
 
   initEvents() {
@@ -100,6 +116,28 @@ class WhatsAppController {
 
     this.el.btnClosePanelAddContact.on('click', e => {
       this.el.panelAddContact.removeClass('open');
+    });
+
+    this.el.photoContainerEditProfile.on('click', e => {
+      this.el.inputProfilePhoto.click();
+    });
+
+    // campo -> seu nome (dentro de Perfil)
+    this.el.inputNamePanelEditProfile.on('keypress', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();// evita quebra de linhas (nesse caso)
+        this.el.btnSavePanelEditProfile.click();
+      }
+    });
+
+    this.el.btnSavePanelEditProfile.on('click', e => {
+      console.log(this.el.inputNamePanelEditProfile.innerHTML);
+    });
+
+    this.el.formPanelAddContact.on('submit', e => {
+      e.preventDefault();// pra nao dar refresh na tela
+      // FormData -> trata os campos e recupera automaticamente com base no name
+      let formData = new FormData(this.el.formPanelAddContact);
     });
   }
 
