@@ -139,6 +139,48 @@ class WhatsAppController {
       // FormData -> trata os campos e recupera automaticamente com base no name
       let formData = new FormData(this.el.formPanelAddContact);
     });
+
+    this.el.contactsMessagesList.querySelectorAll('.contact-item').forEach(contato => {
+      contato.on('click', e => {
+        this.el.home.hide();
+        // para o painel de cada "conversa" aparecer.. precisamos arrumar o css
+        this.el.main.css({
+          display: 'flex'
+        });
+      });
+    });
+
+    this.el.btnAttach.on('click', e => {
+      //! paramos aqui prograpação.. evitando assim que um evento pai execute o msm evento que o filho sem querer
+      e.stopPropagation();
+
+      this.el.menuAttach.addClass('open');
+      // quando aberto -> add esse evento pra fechar
+      document.addEventListener('click', this.closeMenuAttach.bind(this));//! precisa fazer o bind aqui, para passar a referencia correta para o this do closeMenuAttach()
+    });
+
+    this.el.btnAttachPhoto.on('click', e => {
+      console.log('Photo');
+    });
+
+    this.el.btnAttachCamera.on('click', e => {
+      console.log('Camera');
+    });
+
+    this.el.btnAttachDocument.on('click', e => {
+      console.log('Document');
+    });
+
+    this.el.btnAttachContact.on('click', e => {
+      console.log('Contact');
+    });
+  }
+
+  // metodo criado para poder desinscrever o evento e nao crashar o app 
+  closeMenuAttach(event) {
+    // aqui removemos o evento pelo nome da funcao
+    document.removeEventListener('click', this.closeMenuAttach);
+    this.el.menuAttach.removeClass('open');
   }
 
   closeAllLeftPanel() {
