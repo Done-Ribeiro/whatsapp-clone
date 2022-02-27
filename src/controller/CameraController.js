@@ -6,13 +6,8 @@ class CameraController {
     navigator.mediaDevices.getUserMedia({
       video: true
     }).then(stream => {
-      /**
-       * ? stream é usado para videos, porem no nosso caso se trata de uma imagem
-       * ? por isso precisamos criar uma URL para converte-lo em um arquivo de formato binario
-       */
-      this._videoEl.src = URL.createObjectURL(stream);// cria arquivo no formato binario (file ou blob)
+      this._videoEl.srcObject = new MediaStream(stream);//! bugfix - nova forma de obter imagem da camera
       this._videoEl.play();// força a mostrar a imagem (neste caso)
-
     }).catch(err => {
       console.error(err);
     });
