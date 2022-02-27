@@ -260,7 +260,21 @@ class WhatsAppController {
     //* selecionando todos os emojis e add evento click
     this.el.panelEmojis.querySelectorAll('.emojik').forEach(emoji => {
       emoji.on('click', e => {
-        console.log(emoji.dataset.unicode);
+        //* cloneNode -> clona o emoji, caso contrario ele moveria.. e precisamos de uma copia
+        let img = this.el.imgEmojiDefault.cloneNode();
+        // clone propriedades
+        img.style.cssText = emoji.style.cssText;
+        img.dataset.unicode = emoji.dataset.unicode;
+        img.alt = emoji.dataset.unicode;
+        // clone css
+        emoji.classList.forEach(name => {
+          img.classList.add(name);
+        });
+
+        //* agora inserimos o clone na barra de mensagens
+        this.el.inputText.appendChild(img);
+        //! dispatchEvent -> força um evento, nesse caso para sumir com o placeholder ao clicar no emoji
+        this.el.inputText.dispatchEvent(new Event('keyup'));
       });
     });
   }
