@@ -20,4 +20,14 @@ export class CameraController {
     });
   }
 
+  takePicture(mimeType = 'image/png') {// espera uma imagem do tipo png como padrao
+    let canvas = document.createElement('canvas');// cria um canvas
+    canvas.setAttribute('height', this._videoEl.videoHeight);// seta altura
+    canvas.setAttribute('width', this._videoEl.videoWidth);// seta largura
+    let context = canvas.getContext('2d')// definindo qual o contexto vamos utilizar o canvas
+    context.drawImage(this._videoEl, 0, 0, canvas.width, canvas.height);//* atributos ==> imagem - eixo x - eixo y - largura_final - altura_final
+
+    return canvas.toDataURL(mimeType);// converter canvas em um base64
+  }
+
 }

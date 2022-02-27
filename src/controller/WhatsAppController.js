@@ -195,7 +195,25 @@ export class WhatsAppController {
     });
 
     this.el.btnTakePicture.on('click', e => {
-      console.log('take picture');
+      let dataUrl = this._camera.takePicture();//* aqui vamos receber o base64 vindo do CameraController
+      this.el.pictureCamera.src = dataUrl;// atribui ao elemento que estava escondido
+      this.el.pictureCamera.show();// mostra o pictureCamera
+      this.el.videoCamera.hide();// oculta o videoCamera
+      this.el.btnReshootPanelCamera.show();// mostra botao para tirar outra foto
+      this.el.containerTakePicture.hide();// depois que tirou a foto oculta o btn
+      this.el.containerSendPicture.show();// agora habilita btn para enviar a foto
+    });
+
+    this.el.btnReshootPanelCamera.on('click', e => {
+      this.el.pictureCamera.hide();
+      this.el.videoCamera.show();
+      this.el.btnReshootPanelCamera.hide();
+      this.el.containerTakePicture.show();
+      this.el.containerSendPicture.hide();
+    });
+
+    this.el.btnSendPicture.on('click', e => {
+      console.log(this.el.pictureCamera.src);
     });
 
     this.el.btnAttachDocument.on('click', e => {
