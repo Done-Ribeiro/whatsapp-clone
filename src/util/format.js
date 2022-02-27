@@ -1,4 +1,4 @@
-class Format {
+export class Format {
   static getCamelCase(text) {
     /**
      * criar uma div so pra gerar o dataset
