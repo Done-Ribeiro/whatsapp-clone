@@ -271,8 +271,23 @@ class WhatsAppController {
           img.classList.add(name);
         });
 
-        //* agora inserimos o clone na barra de mensagens
-        this.el.inputText.appendChild(img);
+        let cursor = window.getSelection();
+        // força o focus
+        if (!cursor.focusNode || !cursor.focusNode.id == 'input-text') {
+          this.el.inputText.focus();
+          // aqui temos certeza que estamos dentro do input-text "Digite uma mensagem"
+          cursor = window.getSelection();
+        }
+
+        //* trocando caracteres por emojis
+        let range = document.createRange();// cria um range de caracteres
+        range = cursor.getRangeAt(0);// pega o range na primeira posicao (0)
+        range.deleteContents();// quando clicar no emoji -> remove os caracteres do range
+        let frag = document.createDocumentFragment();// cria um fragmento -> documento em paralelo
+        frag.appendChild(img);// add o clone dentro do "novo documento"
+        range.insertNode(frag);// add o fragmento no range escolhido
+        range.setStartAfter(img);// empurra o cursor pro final do emoji (para nao substitui-lo)
+
         //! dispatchEvent -> força um evento, nesse caso para sumir com o placeholder ao clicar no emoji
         this.el.inputText.dispatchEvent(new Event('keyup'));
       });
