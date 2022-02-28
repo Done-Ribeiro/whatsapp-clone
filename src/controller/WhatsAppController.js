@@ -1,5 +1,6 @@
 import { Format } from '../util/Format';
 import { CameraController } from './CameraController';
+import { DocumentPreviewController } from './DocumentPreviewController';
 
 export class WhatsAppController {
   constructor() {
@@ -222,6 +223,48 @@ export class WhatsAppController {
       this.el.panelDocumentPreview.css({
         'height': 'calc(100% - 120px)'
       });
+      this.el.inputDocument.click();
+    });
+
+    this.el.inputDocument.on('change', e => {
+      if (this.el.inputDocument.files.length) {
+        let file = this.el.inputDocument.files[0];// pega so o primeiro arquivo
+        this._documentPreviewController = new DocumentPreviewController(file);
+        this._documentPreviewController.getPreviewData().then(result => {
+          this.el.imgPanelDocumentPreview.src = result.src;// aqui carrega a pre-visualizacao
+          this.el.infoPanelDocumentPreview.innerHTML = result.info// troca o info de paginas (pdf) para o nome de arquivo
+          this.el.imagePanelDocumentPreview.show();// aqui mostra no painel
+          this.el.filePanelDocumentPreview.hide();
+        }).catch(err => {
+          switch (file.type) {
+            // word
+            case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+            case 'application/msword':
+              this.el.iconPanelDocumentPreview.className = 'jcxhw icon-doc-doc';
+              break;
+
+            // excel
+            case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+            case 'application/vnd.ms-excel':
+              this.el.iconPanelDocumentPreview.className = 'jcxhw icon-doc-xls';
+              break;
+
+            // powerpoint
+            case 'application/vnd.ms-powerpoint':
+            case 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+              this.el.iconPanelDocumentPreview.className = 'jcxhw icon-doc-ppt';
+              break;
+
+            default:
+              this.el.iconPanelDocumentPreview.className = 'jcxhw icon-doc-generic';
+          }
+
+          this.el.filenamePanelDocumentPreview.innerHTML = file.name;// coloca nome do arquivo
+          this.el.imagePanelDocumentPreview.hide();
+          this.el.filePanelDocumentPreview.show();
+
+        });
+      }
     });
 
     this.el.btnClosePanelDocumentPreview.on('click', e => {
