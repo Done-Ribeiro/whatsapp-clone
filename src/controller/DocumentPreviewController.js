@@ -41,7 +41,26 @@ export class DocumentPreviewController {
                * ? a nao ser por URL de um arquivo fisico (já salvo em um servidor)
               */
               pdf.getPage(1).then(page => {//! agora pega a pagina 1
-                console.log('page', page);
+                let viewport = page.getViewport(1);// pega o espaco de visualizacao desta pagina
+
+                // CANVAS
+                let canvas = document.createElement('canvas');
+                let canvasContext = canvas.getContext('2d');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                page.render({//! metodo que vai gerar o preview
+                  canvasContext, // ele espera que passemos o contexto do nosso canvas
+                  viewport // e quem e o viewPort
+                }).then(() => {
+                  let _s = (pdf.numPages > 1) ? 's' : '';
+                  s({
+                    src: canvas.toDataURL('image/png'), // agora vamos "exportar" como imagem final do tipo png
+                    info: `${pdf.numPages} página${_s}` // aqui vai ficar escrito aqui a quantidade de paginas
+                  });// agora vamos montar a resposta
+                }).catch(err => {
+                  f(err);
+                });
               }).catch(err => {
                 f(err);
               });

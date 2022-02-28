@@ -228,6 +228,9 @@ export class WhatsAppController {
 
     this.el.inputDocument.on('change', e => {
       if (this.el.inputDocument.files.length) {
+        this.el.panelDocumentPreview.css({//!!! hack pra resolver problema da altura do preview do pdf
+          'height': '1%'
+        });
         let file = this.el.inputDocument.files[0];// pega so o primeiro arquivo
         this._documentPreviewController = new DocumentPreviewController(file);
         this._documentPreviewController.getPreviewData().then(result => {
@@ -235,7 +238,13 @@ export class WhatsAppController {
           this.el.infoPanelDocumentPreview.innerHTML = result.info// troca o info de paginas (pdf) para o nome de arquivo
           this.el.imagePanelDocumentPreview.show();// aqui mostra no painel
           this.el.filePanelDocumentPreview.hide();
+          this.el.panelDocumentPreview.css({//!!! hack pra resolver problema da altura do preview do pdf
+            'height': 'calc(100% - 120px)'
+          });
         }).catch(err => {
+          this.el.panelDocumentPreview.css({//!!! hack pra resolver problema da altura do preview do pdf
+            'height': 'calc(100% - 120px)'
+          });
           switch (file.type) {
             // word
             case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
