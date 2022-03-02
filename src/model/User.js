@@ -38,4 +38,13 @@ export class User extends Model {
     return User.getRef().doc(email);
   }
 
+  addContact(contact) {
+    //! btoa -> funcao para converter | string nativa [por causa de ,.@ etc] para base64
+    return User.getRef()// vai retornar uma Promise
+      .doc(this.email)// procura por esse email
+      .collection('contacts')// add a colection contacts
+      .doc(btoa(contact.email))// procura na nova colection pelo email passado
+      .set(contact.toJSON());// por fim manda salvar o contato
+  }
+
 }

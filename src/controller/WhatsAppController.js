@@ -184,6 +184,18 @@ export class WhatsAppController {
       e.preventDefault();// pra nao dar refresh na tela
       // FormData -> trata os campos e recupera automaticamente com base no name
       let formData = new FormData(this.el.formPanelAddContact);
+      //! Add contato
+      let contact = new User(formData.get('email'));// cria um novo User com o email que passamos no formulario do contato
+      contact.on('datachange', data => {
+        if (data.name) {// se tiver um nome, por ex. é pq achou um usuario
+          this._user.addContact(contact).then(() => {
+            this.el.btnClosePanelAddContact.click();// forca um clica no botao fechar, quando salvar
+            console.log('Contato foi adicionado!');
+          });
+        } else {
+          console.error('Usuário não foi encontrado.');
+        }
+      });// uma vez que os dados forem carregados
     });
 
     this.el.contactsMessagesList.querySelectorAll('.contact-item').forEach(contato => {
