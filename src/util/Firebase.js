@@ -11,7 +11,7 @@ export class Firebase {
       firebase.initializeApp({
         //firebase data aqui
       });
-      window._initializedFirebase = true;// avisa que tem uma aplicacao em execucao agora
+      window._initializedFirebase = true;
     }
   }
 
