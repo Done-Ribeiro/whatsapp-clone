@@ -12,13 +12,13 @@ export class Message extends Model {
   get type() { return this._data.type; }
   set type(value) { this._data.type = value; }
 
-  get timesTamp() { return this._data.timesTamp; }
-  set timesTamp(value) { this._data.timesTamp = value; }
+  get timeStamp() { return this._data.timeStamp; }
+  set timeStamp(value) { this._data.timeStamp = value; }
 
   get status() { return this._data.status; }
   set status(value) { this._data.status = value; }
 
-  getViewElement(me = true) {// me -> mensagem é minha, por padrao é minha
+  getViewElement(me = true) {// me -> mensagem é minha, por padrao
     let div = document.createElement('div');
     div.className = 'message';
 
@@ -276,19 +276,20 @@ export class Message extends Model {
               </div>
           </div>
         `;
+        break;
     }
     let className = (me) ? 'message-out' : 'message-in';// verifica se a msg eh minha
-    div.firstElementChild().classList.add(className);// add a classe correspondente
+    div.firstElementChild.classList.add(className);// add a classe correspondente
     return div;
   }
 
   static send(chatId, from, type, content) {
     Message.getRef(chatId).add({
       content,
-      timesTamp: new Date(),
-      status: 'wait',
+      from,
       type,
-      from
+      timeStamp: new Date(),
+      status: 'wait'
     });
   }
 
