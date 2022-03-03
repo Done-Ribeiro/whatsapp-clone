@@ -4,6 +4,7 @@ import { MicrophoneController } from './MicrophoneController';
 import { DocumentPreviewController } from './DocumentPreviewController';
 import { Firebase } from '../util/Firebase';
 import { User } from '../model/User';
+import { Chat } from '../model/Chat';
 
 export class WhatsAppController {
   constructor() {
@@ -112,6 +113,7 @@ export class WhatsAppController {
 
         //* quando clicar no contato, abre o painel dele e carrega os dados dele na tela
         div.on('click', e => {
+          console.log('chatId: ', contact.chatId);
           this.el.activeName.innerHTML = contact.name;
           this.el.activeStatus.innerHTML = contact.status;
           if (contact.photo) {
@@ -271,9 +273,15 @@ export class WhatsAppController {
       let contact = new User(formData.get('email'));// cria um novo User com o email que passamos no formulario do contato
       contact.on('datachange', data => {
         if (data.name) {// se tiver um nome, por ex. é pq achou um usuario
-          this._user.addContact(contact).then(() => {
-            this.el.btnClosePanelAddContact.click();// forca um clica no botao fechar, quando salvar
-            console.log('Contato foi adicionado!');
+          // antes de add o contato, criamos o chat (se ele n existir)
+          Chat.createIfNotExists(this._user.email, contact.email).then(chat => {// chat -> referencia do doc do nosso firebase, tendo o id ou data
+            contact.chatId = chat.id;// colocando o id do chat, no lado do contato. ex: "Fulano da Silva"
+            this._user.chatId = chat.id;// agora coloco o id do chat no meu usuario
+            contact.addContact(this._user);//* agora add o meu contato na lista de contato do [contato] que estou no chat
+            this._user.addContact(contact).then(() => {
+              this.el.btnClosePanelAddContact.click();// forca um clica no botao fechar, quando salvar
+              console.log('Contato foi adicionado!');
+            });
           });
         } else {
           console.error('Usuário não foi encontrado.');

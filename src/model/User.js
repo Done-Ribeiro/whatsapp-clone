@@ -16,6 +16,9 @@ export class User extends Model {
   get photo() { return this._data.photo; }
   set photo(value) { this._data.photo = value; }
 
+  get chatId() { return this._data.chatId; }
+  set chatId(value) { this._data.chatId = value; }
+
   getById(id) {
     //! problema de retornar uma promise (then) -> ele busca uma vez so, ele n fica ouvindo... vamos trocar para um LISTENER
     return new Promise((s, f) => {
