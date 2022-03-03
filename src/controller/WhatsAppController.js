@@ -109,6 +109,21 @@ export class WhatsAppController {
           img.src = contact.photo;
           img.show();
         }
+
+        //* quando clicar no contato, abre o painel dele e carrega os dados dele na tela
+        div.on('click', e => {
+          this.el.activeName.innerHTML = contact.name;
+          this.el.activeStatus.innerHTML = contact.status;
+          if (contact.photo) {
+            let img = this.el.activePhoto;
+            img.src = contact.photo;
+            img.show();
+          }
+          this.el.home.hide();// esconde o painel home
+          this.el.main.css({
+            display: 'flex'
+          });// mostra o painel do contato
+        });
         this.el.contactsMessagesList.appendChild(div);// coloca o elemento na tela
       });
     });
