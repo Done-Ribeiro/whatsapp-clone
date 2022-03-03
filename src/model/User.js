@@ -34,17 +34,36 @@ export class User extends Model {
     return Firebase.db().collection('users');
   }
 
+  static getContactsRef(id) {
+    return User.getRef()
+      .doc(id)
+      .collection('contacts');
+  }
+
   static findByEmail(email) {
     return User.getRef().doc(email);
   }
 
   addContact(contact) {
     //! btoa -> funcao para converter | string nativa [por causa de ,.@ etc] para base64
-    return User.getRef()// vai retornar uma Promise
-      .doc(this.email)// procura por esse email
-      .collection('contacts')// add a colection contacts
+    return User.getContactsRef(this.email)
       .doc(btoa(contact.email))// procura na nova colection pelo email passado
       .set(contact.toJSON());// por fim manda salvar o contato
+  }
+
+  getContacts() {
+    return new Promise((s, f) => {
+      User.getContactsRef(this.email).onSnapshot(docs => {
+        let contacts = [];
+        docs.forEach(doc => {
+          let data = doc.data();
+          data.id = doc.id;
+          contacts.push(data);
+        });
+        this.trigger('contactschange', docs);
+        s(contacts);
+      });
+    });
   }
 
 }
