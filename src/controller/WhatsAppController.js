@@ -123,10 +123,19 @@ export class WhatsAppController {
   }
 
   setActiveChat(contact) {
-    this._contactActive = contact;// agora sabemos qual eh o contato ativo
+    /** 
+     * ! para nao ficarmos colocando ouvintes em cada uma das conversas (tornando a aplicação pesada)
+     * ! precisamos "matar" os ouvintes inativos
+     * * para isso, vamos primeiro verificar se existe um contato ativo
+    */
+    if (this._contactActive) {
+      Message.getRef(this._contactActive.chatId).onSnapshot(() => { });//! deixamos o onSnapshot vazio -> zerando o listener, que tinha
+    }
 
+    this._contactActive = contact;
     this.el.activeName.innerHTML = contact.name;
     this.el.activeStatus.innerHTML = contact.status;
+
     if (contact.photo) {
       let img = this.el.activePhoto;
       img.src = contact.photo;
@@ -136,6 +145,20 @@ export class WhatsAppController {
     this.el.main.css({
       display: 'flex'
     });// mostra o painel do contato
+
+    //* busca as msgs, ordena por data, onSnapshot -> escuta em tempo real
+    Message.getRef(this._contactActive.chatId).orderBy('timeStamp').onSnapshot(docs => {
+      this.el.panelMessagesContainer.innerHTML = '';
+      docs.forEach(doc => {
+        let data = doc.data();// recupera os dados
+        let message = new Message();// cria uma nova msg
+        message.fromJSON(data);// converte pra JSON
+
+        let me = (data.from === this._user.email);// verifica se a msg eh minha
+        let view = message.getViewElement(me);// add a variavel view, o conteudo da msg que vamos mostrar
+        this.el.panelMessagesContainer.appendChild(view);// mostra na tela, a msg
+      });
+    });
   }
 
   loadElements() {
@@ -492,12 +515,7 @@ export class WhatsAppController {
 
     //* enviando mensagem para contato
     this.el.btnSend.on('click', e => {
-      Message.send(
-        this._contactActive.chatId,
-        this._user.email,
-        'text',
-        this.el.inputText.innerHTML,
-      );// envia mensagem
+      Message.send(this._contactActive.chatId, this._user.email, 'text', this.el.inputText.innerHTML);// envia mensagem
       this.el.inputText.innerHTML = '';// limpa input
       this.el.panelEmojis.removeClass('open');// limpa painel emoji
     });
