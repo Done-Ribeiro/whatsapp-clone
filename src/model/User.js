@@ -54,9 +54,10 @@ export class User extends Model {
       .set(contact.toJSON());// por fim manda salvar o contato
   }
 
-  getContacts() {
+  getContacts(filter = '') {//* agora podemos ou nao receber um filtro, que por padrao é vazio
     return new Promise((s, f) => {
-      User.getContactsRef(this.email).onSnapshot(docs => {
+      //! obs.: operador ('>=') nao esta funcionando como esperado
+      User.getContactsRef(this.email).where('name', '>=', filter).onSnapshot(docs => {//? para filtrar, adicionamos o .where, passando 3 parametros (campo_filtrar | operador | valor_passado)
         let contacts = [];
         docs.forEach(doc => {
           let data = doc.data();

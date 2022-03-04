@@ -267,6 +267,15 @@ export class WhatsAppController {
   }
 
   initEvents() {
+    // SEARCH
+    this.el.inputSearchContacts.on('keyup', e => {
+      if (this.el.inputSearchContacts.value.length > 0) {
+        this.el.inputSearchContactsPlaceholder.hide();
+      } else {
+        this.el.inputSearchContactsPlaceholder.show();
+      }
+      this._user.getContacts(this.el.inputSearchContacts.value);// faz a busca dos contatos (tendo valor na busca ou nao), passando o valor digitado na busca
+    });
     // PROFILE
     this.el.myPhoto.on('click', e => {
       this.closeAllLeftPanel();
