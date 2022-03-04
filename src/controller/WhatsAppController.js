@@ -163,17 +163,28 @@ export class WhatsAppController {
         //* agora deixamos aqui, pra acessar tanto no if, quanto no else (o status da msg)
         let message = new Message();// cria uma nova msg
         message.fromJSON(data);// converte pra JSON
+        let me = (data.from === this._user.email);// verifica se a msg eh minha
 
         //! para nao list todas as msgs, a cada nova msg... verificamos pelo id (nesse caso, se a msg n existe, criamos)
         if (!this.el.panelMessagesContainer.querySelector('#_' + data.id)) {//? '#_' -> _ pq o firebase pode gerar um id começando com numero, e nos seletores, nao pode começar com numero, por isso a mudança
-          let me = (data.from === this._user.email);// verifica se a msg eh minha
+          //* qndo a msg nao eh minha, a pessoa que leu, alterara o status da msg
+          if (!me) {
+            doc.ref.set({//? fazemos uma alteracao na referencia do documento
+              status: 'read'
+            }, {
+              merge: true
+            });
+          }
+
           let view = message.getViewElement(me);// add a variavel view, o conteudo da msg que vamos mostrar
           this.el.panelMessagesContainer.appendChild(view);// mostra na tela, a msg
-        } else {//! trocar o status da mensagem
+
+        } else if (me) {//! trocar o status da mensagem
           let msgEl = this.el.panelMessagesContainer.querySelector('#_' + data.id);
 
           //? localizar qual eh o status, e troca o conteudo, (innerHTML = 'novo_status')
           /** 
+           * ! message-status -> so existe do meu lado, que estou mandando as mensagens
            * ? nesse caso aqui, o innerHTML ta esperando a string do html que quero colocar
            * ? porem, o message.getStatusViewElement() ta retornando um objeto html (e nao uma string)
            * * pra resolver essa atribuicao, de tipos diferentes
