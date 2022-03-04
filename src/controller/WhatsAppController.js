@@ -151,12 +151,17 @@ export class WhatsAppController {
       this.el.panelMessagesContainer.innerHTML = '';
       docs.forEach(doc => {
         let data = doc.data();// recupera os dados
-        let message = new Message();// cria uma nova msg
-        message.fromJSON(data);// converte pra JSON
+        data.id = doc.id;//* aqui o data precisa de um id, vamos add
 
-        let me = (data.from === this._user.email);// verifica se a msg eh minha
-        let view = message.getViewElement(me);// add a variavel view, o conteudo da msg que vamos mostrar
-        this.el.panelMessagesContainer.appendChild(view);// mostra na tela, a msg
+        //! para nao list todas as msgs, a cada nova msg... verificamos pelo id (nesse caso, se a msg n existe, criamos)
+        if (!this.el.panelMessagesContainer.querySelector('#_' + data.id)) {
+          let message = new Message();// cria uma nova msg
+          message.fromJSON(data);// converte pra JSON
+          let me = (data.from === this._user.email);// verifica se a msg eh minha
+          let view = message.getViewElement(me);// add a variavel view, o conteudo da msg que vamos mostrar
+          this.el.panelMessagesContainer.appendChild(view);// mostra na tela, a msg
+        }
+
       });
     });
   }
