@@ -146,23 +146,37 @@ export class WhatsAppController {
       display: 'flex'
     });// mostra o painel do contato
 
+    //! bugfix - foi pro lado de fora, pra nao ficar limpando a tela, toda vez que ativa um contato
+    this.el.panelMessagesContainer.innerHTML = '';
+
     //* busca as msgs, ordena por data, onSnapshot -> escuta em tempo real
     Message.getRef(this._contactActive.chatId).orderBy('timeStamp').onSnapshot(docs => {
-      this.el.panelMessagesContainer.innerHTML = '';
+      // SCROLL
+      let scrollTop = this.el.panelMessagesContainer.scrollTop;// posicao atual do scroll
+      let scrollTopMax = (this.el.panelMessagesContainer.scrollHeight - this.el.panelMessagesContainer.offsetHeight);// preciso agora saber qual eh o maximo que posso descer com o scroll
+      let autoScroll = (scrollTop >= scrollTopMax);// ou seja, eu ja cheguei no fim do scroll ?
+
       docs.forEach(doc => {
         let data = doc.data();// recupera os dados
         data.id = doc.id;//* aqui o data precisa de um id, vamos add
 
         //! para nao list todas as msgs, a cada nova msg... verificamos pelo id (nesse caso, se a msg n existe, criamos)
-        if (!this.el.panelMessagesContainer.querySelector('#_' + data.id)) {
+        if (!this.el.panelMessagesContainer.querySelector('#_' + data.id)) {//? '#_' -> _ pq o firebase pode gerar um id começando com numero, e nos seletores, nao pode começar com numero, por isso a mudança
           let message = new Message();// cria uma nova msg
           message.fromJSON(data);// converte pra JSON
           let me = (data.from === this._user.email);// verifica se a msg eh minha
           let view = message.getViewElement(me);// add a variavel view, o conteudo da msg que vamos mostrar
           this.el.panelMessagesContainer.appendChild(view);// mostra na tela, a msg
         }
-
       });
+
+      //* aqui saberemos se o scroll precisa ficar no final ou nao
+      if (autoScroll) {// aqui verificamos se o scroll está no fim
+        this.el.panelMessagesContainer.scrollTop = (this.el.panelMessagesContainer.scrollHeight - this.el.panelMessagesContainer.offsetHeight);// calculamos novamente, agora pro elemento filho
+      } else {// aqui queremos que ele esteja "parado" (quando nao estivermos no final)
+        this.el.panelMessagesContainer.scrollTop;// e ele tem que ficar exatamente onde estava o nosso scroll top
+      }
+
     });
   }
 
