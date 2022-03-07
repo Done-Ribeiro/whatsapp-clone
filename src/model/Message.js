@@ -22,6 +22,124 @@ export class Message extends Model {
   get status() { return this._data.status; }
   set status(value) { this._data.status = value; }
 
+  get preview() { return this._data.preview; }
+  set preview(value) { this._data.preview = value; }
+
+  get info() { return this._data.info; }
+  set info(value) { this._data.info = value; }
+
+  get fileType() { return this._data.fileType; }
+  set fileType(value) { this._data.fileType = value; }
+
+  get from() { return this._data.from; }
+  set from(value) { this._data.from = value; }
+
+  get size() { return this._data.size; }
+  set size(value) { this._data.size = value; }
+
+  get filename() { return this._data.filename; }
+  set filename(value) { this._data.filename = value; }
+
+  static upload(file, from) {
+    return new Promise((s, f) => {
+      let uploadTask = Firebase.hd().ref(from).child(Date.now() + '_' + file.name).put(file);
+      uploadTask.on('state_changed', e => {
+        console.log('upload', e);
+      }, err => {
+        f(err);
+      }, () => {
+        uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
+          s(downloadURL);
+        });
+      });
+    });
+  }
+
+  static sendDocument(chatId, from, file, filePreview, info) {
+    Message.send(chatId, from, 'document', '').then(msgRef => {
+
+      Message.upload(file, from).then(downloadURL => {
+        let downloadFile = downloadURL;
+
+        if (filePreview) {// se tiver um preview
+          Message.upload(filePreview, from).then(downloadURL2 => {
+            let downloadPreview = downloadURL2;
+
+            msgRef.set({
+              content: downloadFile,
+              preview: downloadPreview,
+              filename: file.name,
+              size: file.size,
+              fileType: file.type,
+              status: 'send',
+              info
+            }, {
+              merge: true
+            });
+          });
+        } else {
+          msgRef.set({
+            content: downloadFile,
+            filename: file.name,
+            size: file.size,
+            fileType: file.type,
+            status: 'send'
+          }, {
+            merge: true
+          });
+        }
+      });
+    });
+  }
+
+  static sendImage(chatId, from, file) {
+    return new Promise((s, f) => {
+      let uploadTask = Firebase.hd().ref(from).child(Date.now() + '_' + file.name).put(file);
+      uploadTask.on('state_changed', e => {
+        // console.info('upload', e);
+      }, err => {
+        console.error(err)
+      }, () => {
+        uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
+          Message.send(
+            chatId,
+            from,
+            'image',
+            downloadURL
+          ).then(() => {
+            s();
+          });
+        });
+      });
+    });
+  }
+
+  static send(chatId, from, type, content) {
+    return new Promise((s, f) => {
+      Message.getRef(chatId).add({
+        content,
+        from,
+        type,
+        timeStamp: new Date(),
+        status: 'wait'
+      }).then(result => {
+        let docRef = result.parent.doc(result.id);
+
+        docRef.set({
+          status: 'send'
+        }, {
+          merge: true
+        }).then(() => {
+          s(docRef);
+        });
+      });
+    });
+  }
+
+  static getRef(chatId) {
+    return Firebase.db().collection('chats').doc(chatId).collection('messages');
+  }
+
   getViewElement(me = true) {// me -> mensagem é minha, por padrao
     let div = document.createElement('div');
     div.className = 'message';
@@ -119,44 +237,47 @@ export class Message extends Model {
       case 'document':
         div.innerHTML = `
           <div class="_3_7SH _1ZPgd">
-              <div class="_1fnMt _2CORf">
-                  <a class="_1vKRe" href="#">
-                      <div class="_2jTyA" style="background-image: url()"></div>
-                      <div class="_12xX7">
-                          <div class="_3eW69">
-                              <div class="JdzFp message-file-icon icon-doc-pdf"></div>
-                          </div>
-                          <div class="nxILt">
-                              <span dir="auto" class="message-filename">Arquivo.pdf</span>
-                          </div>
-                          <div class="_17viz">
-                              <span data-icon="audio-download" class="message-file-download">
-                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" width="34" height="34">
-                                      <path fill="#263238" fill-opacity=".5" d="M17 2c8.3 0 15 6.7 15 15s-6.7 15-15 15S2 25.3 2 17 8.7 2 17 2m0-1C8.2 1 1 8.2 1 17s7.2 16 16 16 16-7.2 16-16S25.8 1 17 1z"></path>
-                                      <path fill="#263238" fill-opacity=".5" d="M22.4 17.5h-3.2v-6.8c0-.4-.3-.7-.7-.7h-3.2c-.4 0-.7.3-.7.7v6.8h-3.2c-.6 0-.8.4-.4.8l5 5.3c.5.7 1 .5 1.5 0l5-5.3c.7-.5.5-.8-.1-.8z"></path>
-                                  </svg>
-                              </span>
-                              <div class="_3SUnz message-file-load" style="display:none">
-                                  <svg class="_1UDDE" width="32" height="32" viewBox="0 0 43 43">
-                                      <circle class="_3GbTq _37WZ9" cx="21.5" cy="21.5" r="20" fill="none" stroke-width="3"></circle>
-                                  </svg>
-                              </div>
-                          </div>
-                      </div>
-                  </a>
-                  <div class="_3cMIj">
-                      <span class="PyPig message-file-info">32 páginas</span>
-                      <span class="PyPig message-file-type">PDF</span>
-                      <span class="PyPig message-file-size">4 MB</span>
-                  </div>
-                  <div class="_3Lj_s">
-                      <div class="_1DZAH" role="button">
-                          <span class="message-time">${Format.timeStampToTime(this.timeStamp)}</span>
-                      </div>
-                  </div>
-              </div>
+            <div class="_1fnMt _2CORf">
+                <a class="_1vKRe" href="#">
+                    <div class="_2jTyA" style="background-image: url(${this.preview})"></div>
+                    <div class="_12xX7">
+                        <div class="_3eW69">
+                            <div class="JdzFp message-file-icon"></div>
+                        </div>
+                        <div class="nxILt">
+                            <span dir="auto" class="message-filename">${this.filename}</span>
+                        </div>
+                        <div class="_17viz">
+                            <span data-icon="audio-download" class="message-file-download">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" width="34" height="34">
+                                    <path fill="#263238" fill-opacity=".5" d="M17 2c8.3 0 15 6.7 15 15s-6.7 15-15 15S2 25.3 2 17 8.7 2 17 2m0-1C8.2 1 1 8.2 1 17s7.2 16 16 16 16-7.2 16-16S25.8 1 17 1z"></path>
+                                    <path fill="#263238" fill-opacity=".5" d="M22.4 17.5h-3.2v-6.8c0-.4-.3-.7-.7-.7h-3.2c-.4 0-.7.3-.7.7v6.8h-3.2c-.6 0-.8.4-.4.8l5 5.3c.5.7 1 .5 1.5 0l5-5.3c.7-.5.5-.8-.1-.8z"></path>
+                                </svg>
+                            </span>
+                            <div class="_3SUnz message-file-load" style="display:none">
+                                <svg class="_1UDDE" width="32" height="32" viewBox="0 0 43 43">
+                                    <circle class="_3GbTq _37WZ9" cx="21.5" cy="21.5" r="20" fill="none" stroke-width="3"></circle>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                <div class="_3cMIj">
+                    <span class="PyPig message-file-info">${this.info}</span>
+                    <span class="PyPig message-file-type">${this.fileType}</span>
+                    <span class="PyPig message-file-size">${this.size}</span>
+                </div>
+                <div class="_3Lj_s">
+                    <div class="_1DZAH" role="button">
+                        <span class="message-time">${Format.timeStampToTime(this.timeStamp)}</span>
+                    </div>
+                </div>
+            </div>
           </div>
         `;
+        div.on('click', e => {
+          window.open(this.content);// download do documento
+        });
         break;
       case 'audio':
         div.innerHTML = `
@@ -272,64 +393,6 @@ export class Message extends Model {
 
     div.firstElementChild.classList.add(className);// add a classe correspondente
     return div;
-  }
-
-  static sendImage(chatId, from, file) {
-    //! fazer upload de arquivo para firebase storage
-    return new Promise((s, f) => {
-      let uploadTask = Firebase.hd().ref(from).child(Date.now() + '_' + file.name).put(file);//? o put retorna um uploadTask
-      uploadTask.on('state_changed', e => {
-        console.log('upload', e);
-      }, err => {
-        console.error(err);
-      }, () => {
-        uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
-          Message.send(
-            chatId,
-            from,
-            'image',
-            downloadURL
-          ).then(() => {
-            s();
-          });
-        });
-      });
-    });// como agora vai levar um tempo pra acontecer esse send (envio), faz sentido retornar uma promessa
-  }
-
-  static send(chatId, from, type, content) {
-    return new Promise((s, f) => {
-      Message.getRef(chatId).add({
-        content,
-        from,
-        type,
-        timeStamp: new Date(),
-        status: 'wait'
-      }).then(result => {
-        //? dentro da variavel result, tenho o documento do pai (doc), e dentro dele vou procurar o id que acabou de inserir (result.id)
-        result.parent.doc(result.id).set({// set -> vamos agora alterar o status desta msg
-          status: 'send'
-        }, {
-          /**
-           * ! [obrigatorio passar esse parametro]
-           * ! pq se nao, apagaremos oq tinha no objeto e colocaremos apenas o novo status!
-           * ! poderia ser resolvido com um Object.assign tbm...
-           * ! mas o firebase aceita um segundo parametro no set({})
-           * ! e desta forma, com (merge: true) eh bem mais simples
-           */
-          merge: true
-        }).then(() => {//? o set() retorna uma promise, aqui se deu tudo certo, mandamos o sucesso -> s();
-          s();
-        });
-      });
-    });
-  }
-
-  static getRef(chatId) {
-    return Firebase.db()
-      .collection('chats')
-      .doc(chatId)
-      .collection('messages');
   }
 
   getStatusViewElement() {

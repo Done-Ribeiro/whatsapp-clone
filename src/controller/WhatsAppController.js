@@ -6,6 +6,7 @@ import { Firebase } from '../util/Firebase';
 import { User } from '../model/User';
 import { Chat } from '../model/Chat';
 import { Message } from '../model/Message';
+import { Base64 } from '../util/Base64';
 
 export class WhatsAppController {
   constructor() {
@@ -179,7 +180,12 @@ export class WhatsAppController {
           let view = message.getViewElement(me);// add a variavel view, o conteudo da msg que vamos mostrar
           this.el.panelMessagesContainer.appendChild(view);// mostra na tela, a msg
 
-        } else if (me) {//! trocar o status da mensagem
+        } else {
+          let view = message.getViewElement(me);
+          this.el.panelMessagesContainer.querySelector('#_' + data.id).innerHTML = view.innerHTML;// ao inves de fazer um appendChild, queremos substituir o elemento, q ja esta na tela
+        }
+
+        if (this.el.panelMessagesContainer.querySelector('#_' + data.id) && me) {//! trocar o status da mensagem
           let msgEl = this.el.panelMessagesContainer.querySelector('#_' + data.id);
 
           //? localizar qual eh o status, e troca o conteudo, (innerHTML = 'novo_status')
@@ -550,8 +556,20 @@ export class WhatsAppController {
       this.el.panelMessagesContainer.show();
     });
 
-    this.el.btnSendDocument.on('click', e => {
-      console.log('send document');
+    // DOCUMENT
+    this.el.btnSendDocument.on('click', event => {
+      let documentFile = this.el.inputDocument.files[0];
+
+      if (documentFile.type === 'application/pdf') {
+        Base64.toFile(this.el.imgPanelDocumentPreview.src).then(imageFile => {
+          Message.sendDocument(this._contactActive.chatId, this._user.email, documentFile, imageFile, this.el.infoPanelDocumentPreview.innerHTML);
+        });
+
+      } else {
+        Message.sendDocument(this._contactActive.chatId, this._user.email, documentFile);
+      }
+
+      this.el.btnClosePanelDocumentPreview.click();// disparando o click, ele fecha o documento
     });
 
     this.el.btnAttachContact.on('click', e => {
