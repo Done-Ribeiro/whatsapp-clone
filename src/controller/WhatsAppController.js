@@ -394,10 +394,9 @@ export class WhatsAppController {
     });
 
     this.el.inputPhoto.on('change', e => {
-      console.log(this.el.inputPhoto.files);
       // files é uma colecao e nao um array.. por isso do spread -> [...]
       [...this.el.inputPhoto.files].forEach(file => {
-        console.log(file);
+        Message.sendImage(this._contactActive.chatId, this._user.email, file);
       });
     });
 

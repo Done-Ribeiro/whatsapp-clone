@@ -54,7 +54,7 @@ export class Message extends Model {
                       </div>
                       <div class="_3a5-b">
                           <div class="_1DZAH" role="button">
-                              <span class="message-time">17:01</span>
+                              <span class="message-time">${Format.timeStampToTime(this.timeStamp)}</span>
                           </div>
                       </div>
                   </div>
@@ -88,17 +88,12 @@ export class Message extends Model {
                                   </div>
                               </div>
                           </div>
-                          <img src="#" class="_1JVSX message-photo" style="width: 100%; display:none">
+                          <img src="${this.content}" class="_1JVSX message-photo" style="width: 100%; display:none">
                           <div class="_1i3Za"></div>
-                      </div>
-                      <div class="message-container-legend">
-                          <div class="_3zb-j ZhF0n">
-                              <span dir="ltr" class="selectable-text invisible-space copyable-text message-text">Texto da foto</span>
-                          </div>
                       </div>
                       <div class="_2TvOE">
                           <div class="_1DZAH text-white" role="button">
-                              <span class="message-time">17:22</span>
+                              <span class="message-time">${Format.timeStampToTime(this.timeStamp)}</span>
                           </div>
                       </div>
                   </div>
@@ -113,6 +108,13 @@ export class Message extends Model {
               </div>
           </div>
         `;
+        div.querySelector('.message-photo').on('load', e => {//* evento de load, ou seja, quando conseguir terminar de carregar a minha img
+          div.querySelector('.message-photo').show();// mostra a imagem
+          div.querySelector('._34Olu').hide();// esconde uma classe que fica antes da img, para poder mostrar a msm
+          div.querySelector('._3v3PK').css({
+            height: 'auto'
+          });// tira a altura do elemento, pra ficar auto
+        });
         break;
       case 'document':
         div.innerHTML = `
@@ -149,7 +151,7 @@ export class Message extends Model {
                   </div>
                   <div class="_3Lj_s">
                       <div class="_1DZAH" role="button">
-                          <span class="message-time">18:56</span>
+                          <span class="message-time">${Format.timeStampToTime(this.timeStamp)}</span>
                       </div>
                   </div>
               </div>
@@ -220,7 +222,7 @@ export class Message extends Model {
                   </div>
                   <div class="_27K_5">
                       <div class="_1DZAH" role="button">
-                          <span class="message-time">17:48</span>
+                          <span class="message-time">${Format.timeStampToTime(this.timeStamp)}</span>
                       </div>
                   </div>
               </div>
@@ -270,6 +272,29 @@ export class Message extends Model {
 
     div.firstElementChild.classList.add(className);// add a classe correspondente
     return div;
+  }
+
+  static sendImage(chatId, from, file) {
+    //! fazer upload de arquivo para firebase storage
+    return new Promise((s, f) => {
+      let uploadTask = Firebase.hd().ref(from).child(Date.now() + '_' + file.name).put(file);//? o put retorna um uploadTask
+      uploadTask.on('state_changed', e => {
+        console.log('upload', e);
+      }, err => {
+        console.error(err);
+      }, () => {
+        uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
+          Message.send(
+            chatId,
+            from,
+            'image',
+            downloadURL
+          ).then(() => {
+            s();
+          });
+        });
+      });
+    });// como agora vai levar um tempo pra acontecer esse send (envio), faz sentido retornar uma promessa
   }
 
   static send(chatId, from, type, content) {
