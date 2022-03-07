@@ -438,8 +438,52 @@ export class WhatsAppController {
       this.el.containerSendPicture.hide();
     });
 
+    // PHOTO CAMERA
     this.el.btnSendPicture.on('click', e => {
-      console.log(this.el.pictureCamera.src);
+      this.el.btnSendPicture.disabled = true;//? como o processo pode demorar, vamos travar o botao, pra nao clicar mais de uma vez
+
+      let regex = /^data:(.+);base64,(.*)$/;
+      let result = this.el.pictureCamera.src.match(regex);
+      let mimeType = result[1];
+      let ext = mimeType.split('/')[1];// extensao -> ex.: png
+      let filename = `camera${Date.now()}.${ext}`;
+
+      //* CANVAS
+      let picture = new Image();// pra desenhar img dentro do canvas, precisa deste obj aqui
+      picture.src = this.el.pictureCamera.src;// jogamos a img do base64 pra dentro
+      picture.onload = e => {// pode levar um tempo, por isso config o onload dele
+        //* configuracoes
+        let canvas = document.createElement('canvas');
+        let context = canvas.getContext('2d');
+        canvas.width = picture.width;
+        canvas.height = picture.height;
+
+        //* invertendo imagem
+        context.translate(picture.width, 0);// nesse momento, deslocamos a largura da imagem horizontalmente, eixo vertical passamos 0 (nao deslocou nada)
+        context.scale(-1, 1);// rotacionando horizontalment (primeiro parametro)
+
+        //* desenhando imagem
+        context.drawImage(picture, 0, 0, canvas.width, canvas.height);// desenhar imagem
+
+        //* voltar agora pra base64, pra fazer o fetch()
+        fetch(canvas.toDataURL(mimeType))//! passar o base64 da imagem invertida
+          .then(res => { return res.arrayBuffer(); })// se eu dou um return nessa promessa.. 
+          .then(buffer => { return new File([buffer], filename, { type: mimeType }); })// significa q aqui, temos, mais uma promessa
+          .then(file => {//? agora sim, este file aqui.. eh o que vamos passar pro sendImage()
+            Message.sendImage(this._contactActive.chatId, this._user.email, file);
+            this.el.btnSendPicture.disabled = false;
+
+            // depois de enviar a foto
+            this.closeAllMainPanel();
+            this._camera.stop();
+            this.el.btnReshootPanelCamera.hide();
+            this.el.pictureCamera.hide();
+            this.el.videoCamera.show();
+            this.el.containerSendPicture.hide();
+            this.el.containerTakePicture.show();
+            this.el.panelMessagesContainer.show();
+          });
+      }
     });
 
     this.el.btnAttachDocument.on('click', e => {
