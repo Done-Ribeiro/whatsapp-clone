@@ -8,6 +8,7 @@ import { Chat } from '../model/Chat';
 import { Message } from '../model/Message';
 import { Base64 } from '../util/Base64';
 import { ContactsController } from './ContactsController';
+import { Upload } from '../util/Upload';
 
 export class WhatsAppController {
   constructor() {
@@ -348,6 +349,20 @@ export class WhatsAppController {
 
     this.el.photoContainerEditProfile.on('click', e => {
       this.el.inputProfilePhoto.click();
+    });
+
+    // trocar foto do profile
+    this.el.inputProfilePhoto.on('change', e => {
+      if (this.el.inputProfilePhoto.files.length > 0) {// verificamos se tem arquivos dentro
+        let file = this.el.inputProfilePhoto.files[0];// pega o 1 arquivo
+        Upload.send(file, this._user.email).then(downloadURL => {
+          this._user.photo = downloadURL;// troca a foto atual do usuario logado
+          this._user.save().then(() => {// salva a nova foto, (obs.: na pratica nao salvara permanentemente, pq o login eh na conta google.. e a cada novo login ele buscara a foto do google novamente)
+            //* usaremos essa promessa, somente pra fechar o painel, quando a foto for trocada
+            this.el.btnClosePanelEditProfile.click();// quando salvar, força um click, fecha o painel
+          });
+        });
+      }
     });
 
     // campo -> seu nome (dentro de Perfil)
