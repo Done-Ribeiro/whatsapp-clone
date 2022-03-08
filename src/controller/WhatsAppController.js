@@ -167,9 +167,10 @@ export class WhatsAppController {
         message.fromJSON(data);// converte pra JSON
         let me = (data.from === this._user.email);// verifica se a msg eh minha
 
-        //! para nao list todas as msgs, a cada nova msg... verificamos pelo id (nesse caso, se a msg n existe, criamos)
-        if (!this.el.panelMessagesContainer.querySelector('#_' + data.id)) {//? '#_' -> _ pq o firebase pode gerar um id começando com numero, e nos seletores, nao pode começar com numero, por isso a mudança
-          //* qndo a msg nao eh minha, a pessoa que leu, alterara o status da msg
+        let view = message.getViewElement(me);
+
+        if (!this.el.panelMessagesContainer.querySelector('#_' + data.id)) {
+
           if (!me) {
             doc.ref.set({//? fazemos uma alteracao na referencia do documento
               status: 'read'
@@ -178,26 +179,38 @@ export class WhatsAppController {
             });
           }
 
-          let view = message.getViewElement(me);// add a variavel view, o conteudo da msg que vamos mostrar
           this.el.panelMessagesContainer.appendChild(view);// mostra na tela, a msg
 
         } else {
-          let view = message.getViewElement(me);
-          this.el.panelMessagesContainer.querySelector('#_' + data.id).innerHTML = view.innerHTML;// ao inves de fazer um appendChild, queremos substituir o elemento, q ja esta na tela
+          //* troca de filho -> par trocar o conteudo, sem apagar os eventos atrelados a eles
+          let parent = this.el.panelMessagesContainer.querySelector('#_', + data.id).parentNode;
+          parent.replaceChild(view, this.el.panelMessagesContainer.querySelector('#_' + data.id));// trocar de filho -> novo, pelo antigo
         }
 
-        if (this.el.panelMessagesContainer.querySelector('#_' + data.id) && me) {//! trocar o status da mensagem
+        if (this.el.panelMessagesContainer.querySelector('#_' + data.id) && me) {
           let msgEl = this.el.panelMessagesContainer.querySelector('#_' + data.id);
-
-          //? localizar qual eh o status, e troca o conteudo, (innerHTML = 'novo_status')
-          /** 
-           * ! message-status -> so existe do meu lado, que estou mandando as mensagens
-           * ? nesse caso aqui, o innerHTML ta esperando a string do html que quero colocar
-           * ? porem, o message.getStatusViewElement() ta retornando um objeto html (e nao uma string)
-           * * pra resolver essa atribuicao, de tipos diferentes
-           * * usamos a propriedade -> 'outerHTML'
-          */
           msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement().outerHTML;
+        }
+        if (message.type === 'contact') {
+          view.querySelector('.btn-message-send').on('click', e => {
+
+            Chat.createIfNotExists(this._user.email, message.content.email).then(chat => {
+              let contact = new User(message.content.email);
+
+              contact.on('datachange', data => {
+                // salva contato no meu usuarios
+                contact.chatId = chat.id;
+                this._user.addContact(contact);
+
+                // salva meu usuario no contato
+                this._user.chatId = chat.id;
+                contact.addContact(this._user);
+
+                // abre o chat
+                this.setActiveChat(contact);
+              });
+            });
+          });
         }
       });
 
